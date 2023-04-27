@@ -1,4 +1,5 @@
 "./Core/Inc/mpu.o"
+"./Core/Src/BME280_STM32.o"
 "./Core/Src/main.o"
 "./Core/Src/stm32f1xx_hal_msp.o"
 "./Core/Src/stm32f1xx_it.o"
