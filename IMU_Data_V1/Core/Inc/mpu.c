@@ -41,7 +41,7 @@ uint8_t MPU6050_Init(I2C_HandleTypeDef *I2Cx)
 
     HAL_I2C_Mem_Read(I2Cx, MPU6050_ADDR, WHO_AM_I_REG, 1, &check, 1, i2c_timeout);
 
-    if (check == 104) // 0x68 will be returned by the sensor if everything goes well
+    if (check == 104)
     {
         \
         Data = 0;

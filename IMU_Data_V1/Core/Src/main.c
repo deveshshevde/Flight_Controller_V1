@@ -23,6 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "mpu.h"
+#include "BME280_STM32.h"
+#include "math.h"
 
 /* USER CODE END Includes */
 
@@ -33,6 +35,27 @@
 #define ESC_CALIBRATE 1
 
 #define ESC_OFFSET    50
+
+
+#define PRESSURE_AT_GROUND 1013.25
+
+
+#define Targeted_Altitude 0
+
+// R = universal gas constant (8.314 JK-1 mol-1)
+// M = mean molar mass of the atmospheric gases (0.02896 kgmol-1)
+// g = acceleration due to gravity; g = 9.80620 m/s2 at the 45th degree of latitude
+// T = absolute temperature (273 K)
+// Δh=h1 –h0
+
+//p(h1) = p(ho)e^(-Mg/RT)*Δh
+
+//Mg/RT = 0.008648617242959709
+
+
+
+
+#define expo_constant 0.008648617242959709
 
 
 float M1_M2,//Channel_1 and Channel_2
@@ -61,6 +84,22 @@ float    kP,
 
 
 int PID_OUTPUT,Speed;
+
+
+
+//BME data
+
+
+float Temperature,
+	  Pressure   ,
+	  Humidity   ;
+
+
+float Current_Height        ,
+	  Initial_Height_Offset ,
+	  Previous_Height       ,
+	  Error_Height 			;
+
 
 /* USER CODE END PTD */
 
@@ -94,6 +133,19 @@ static void MX_TIM1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 MPU6050_t MPU6050;
+
+
+
+
+void Altitude_Hold()//CALCULATION : https://www.amsys-sensor.com/downloads/notes/ms5611-precise-altitude-measurement-with-a-pressure-sensor-module-amsys-509e.pdf
+{
+	 BME280_Measure();
+
+	 Current_Height = Initial_Height_Offset + (log(PRESSURE_AT_GROUND/Pressure)/ expo_constant);
+	 Error_Height = Current_Height - Targeted_Altitude;
+
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -164,6 +216,13 @@ int main(void)
 
 #endif
 
+
+
+  //BME
+
+  BME280_Config(OSRS_2, OSRS_16, OSRS_1, MODE_NORMAL, T_SB_0p5, IIR_16);
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -171,6 +230,7 @@ int main(void)
   while (1)
   {
 	  MPU6050_Read_All(&hi2c1, &MPU6050);
+
 	  prev_Time = Time;
 	  Time = micros();
 
@@ -187,7 +247,7 @@ int main(void)
 	  inte_error = kI * inte_error + (kI * Error);
 
 
-	  PID_OUTPUT = (int)(prop_error + deri_error + inte_error);
+	  PID_OUTPUT = (int)abs((prop_error + deri_error + inte_error));
 
 
 
@@ -203,6 +263,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 	  prevError = Error;
+
+
+
+
+
   }
   /* USER CODE END 3 */
 }
